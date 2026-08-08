@@ -74,13 +74,18 @@ if IS_VERCEL:
     if not DB_PATH.exists():
         if SEED_DB.exists():
             try:
-                shutil.copyfile(SEED_DB, DB_PATH)
+                shutil.copyfile(str(SEED_DB), str(DB_PATH))
+            except Exception:
+                pass
+        if not DB_PATH.exists():
+            try:
+                DB_PATH.touch()
             except Exception:
                 pass
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': DB_PATH if DB_PATH.exists() else SEED_DB,
+            'NAME': DB_PATH,
         }
     }
 else:
