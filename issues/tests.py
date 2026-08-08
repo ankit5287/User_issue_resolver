@@ -19,7 +19,7 @@ class UserIssueResolverAuthTests(TestCase):
         """Anonymous requests can access the user submit portal."""
         response = self.client.get(reverse('user_portal'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'How can we help?')
+        self.assertContains(response, 'What issue are you facing?')
 
     def test_developer_dashboard_redirects_anonymous(self):
         """Anonymous requests to developer dashboard redirect to login page."""
