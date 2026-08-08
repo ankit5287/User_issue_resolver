@@ -1,0 +1,253 @@
+{% extends 'base_developer.html' %}
+
+{% block title %}Issue #{{ issue.id }} Details - User Issue Resolver Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Apple Badge dark overrides */
+  .badge-apple {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    border: none;
+  }
+  .badge-status-open { background-color: #1A2A3A; color: #60A5FA; border: 1px solid #2A3A5A !important; }
+  .badge-status-escalated { background-color: #3A1A1A; color: #F87171; border: 1px solid #5A2A2A !important; }
+  .badge-status-resolved { background-color: #1A3A2A; color: #34D399; border: 1px solid #2A5A3A !important; }
+
+  /* Team Badge Colors */
+  .badge-team-tech { background-color: #1A2A3A; color: #5DADE2; border: 1px solid #2A3A5A !important; }
+  .badge-team-billing { background-color: #2A1A3A; color: #A78BFA; border: 1px solid #3A2A5A !important; }
+  .badge-team-general { background-color: #2A2A2A; color: #8B8F99; border: 1px solid #3A3A3A !important; }
+  .badge-team-security { background-color: #3A1A1A; color: #F87171; border: 1px solid #5A2A2A !important; }
+
+  .section-label {
+    font-size: 11px;
+    color: #94A3B8;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .section-value {
+    font-size: 15px;
+    color: #FFFFFF;
+    font-weight: 400;
+  }
+
+  .btn-update-apple {
+    height: 48px;
+    background-color: #60A5FA !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-size: 15px;
+    color: #FFFFFF !important;
+    font-weight: 500;
+    transition: background-color 0.15s ease;
+  }
+  .btn-update-apple:hover {
+    background-color: #3B82F6 !important;
+  }
+
+  .back-dashboard-link {
+    color: #60A5FA;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+  .back-dashboard-link:hover {
+    color: #3B82F6;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb Navigation -->
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb mb-0" style="font-size: 13px;">
+    <li class="breadcrumb-item"><a href="{% url 'developer_dashboard' %}" class="text-decoration-none" style="color: #5DADE2;">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'all_issues' %}" class="text-decoration-none" style="color: #5DADE2;">All Issues</a></li>
+    <li class="breadcrumb-item active text-white" aria-current="page" style="color: #8B8F99 !important;">Issue #{{ issue.id }}</li>
+  </ol>
+</nav>
+
+<div class="row g-4 my-2">
+  
+  <!-- Left Column: Issue Info Card (col-md-8) -->
+  <div class="col-md-8">
+    <div class="card apple-card border-0" style="background-color: #151A25; border: 1px solid #1E2530 !important;">
+      <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light" style="border-bottom-color: #1E2530 !important;">
+        <h5 class="mb-0 fw-bold" style="font-size: 20px; color: #FFFFFF;">Issue Information</h5>
+        <span class="text-muted small data-mono" style="font-size: 13px; color: #94A3B8;">ID: #{{ issue.id }}</span>
+      </div>
+      
+      <!-- Metadata items -->
+      <div class="space-y-4 d-flex flex-column gap-3">
+        <div>
+          <span class="section-label">Email Address</span>
+          <span class="section-value data-mono">{{ issue.customer_email }}</span>
+        </div>
+
+        <div>
+          <span class="section-label">Email</span>
+          <span class="section-value fw-bold" style="font-size: 18px; color: #FFFFFF;">{{ issue.customer_email }}</span>
+        </div>
+
+        <div>
+          <span class="section-label">Assigned Team</span>
+          {% if issue.assigned_team == 'Technical Support' %}
+            <span class="badge-apple badge-team-tech">Technical Support</span>
+          {% elif issue.assigned_team == 'Billing' %}
+            <span class="badge-apple badge-team-billing">Billing</span>
+          {% elif issue.assigned_team == 'Security' %}
+            <span class="badge-apple badge-team-security">Security</span>
+          {% else %}
+            <span class="badge-apple badge-team-general">General Inquiry</span>
+          {% endif %}
+        </div>
+
+        <div>
+          <span class="section-label">Created At</span>
+          <span class="section-value data-mono" style="color: #94A3B8;">{{ issue.created_at|date:"Y-m-d H:i:s" }}</span>
+        </div>
+
+        {% if issue.resolved_at %}
+        <div>
+          <span class="section-label" style="color: #34D399;">Resolved At</span>
+          <span class="section-value data-mono" style="color: #34D399;">{{ issue.resolved_at|date:"Y-m-d H:i:s" }}</span>
+        </div>
+        {% endif %}
+
+        <div>
+          <span class="section-label">Message Body</span>
+          <div class="p-3 border-0 leading-relaxed" style="background-color: #0B0E14; border: 1px solid #1E2530 !important; border-radius: 12px; font-size: 14px; color: #FFFFFF !important;">
+            {{ issue.body }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Index Preview (Collapsible Card) -->
+    <div class="card apple-card border-0 mt-4" style="background-color: #151A25; border: 1px solid #1E2530 !important;">
+      <div class="border-0 bg-transparent">
+        <button class="btn btn-link text-white fw-bold p-0 text-decoration-none d-flex justify-content-between align-items-center w-100" type="button" data-bs-toggle="collapse" data-bs-target="#searchIndexPreview" aria-expanded="false" aria-controls="searchIndexPreview">
+          <span style="font-size: 16px; color: #FFFFFF;">Search Index Preview</span>
+          <span class="text-muted small" style="color: #94A3B8;">Toggle view</span>
+        </button>
+      </div>
+      <div class="collapse" id="searchIndexPreview">
+        <div class="mt-4 p-4 rounded-xl" style="background-color: #0B0E14;">
+          <p class="text-muted mb-3" style="font-size: 13px; color: #94A3B8;">A mock preview showing the inverted index generated from keywords parsed in this issue.</p>
+          <pre class="bg-transparent p-3 rounded-lg data-mono mb-0" style="font-size: 13px; color: #94A3B8; border: 1px solid #1E2530 !important;">
+{
+  "api": [{{ issue.id }}],
+  "gateway": [{{ issue.id }}],
+  "504": [{{ issue.id }}],
+  "timeout": [{{ issue.id }}],
+  "webhook": [{{ issue.id }}],
+  "routing": [{{ issue.id }}]
+}
+          </pre>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right Column: Actions Card (col-md-4) -->
+  <div class="col-md-4">
+    <div class="card apple-card border-0" style="padding: 28px; background-color: #151A25; border: 1px solid #1E2530 !important;">
+      <h5 class="fw-bold mb-4" style="font-size: 18px; color: #FFFFFF;">Management & Action</h5>
+      
+      <!-- Current Status Badge -->
+      <div class="mb-4">
+        <span class="section-label">Current Status</span>
+        {% if issue.status == 'Open' %}
+          <span class="badge-apple badge-status-open mt-1">Open</span>
+        {% elif issue.status == 'Resolved' %}
+          <span class="badge-apple badge-status-resolved mt-1">Resolved</span>
+        {% elif issue.status == 'Escalated' %}
+          <span class="badge-apple badge-status-escalated mt-1">Escalated</span>
+        {% endif %}
+      </div>
+
+      <form method="POST" action="{% url 'issue_detail' issue.id %}">
+        {% csrf_token %}
+
+        <!-- Assigned Team Dropdown -->
+        <div class="mb-3">
+          <label for="id-assigned-team" class="form-label mb-1" style="font-size: 12px; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.5px;">Assigned Team</label>
+          <div class="position-relative">
+            <select name="assigned_team" id="id-assigned-team" class="form-select" style="background-color: #0B0E14; border: 1px solid #1E2530; color: white;">
+              <option value="Technical Support" {% if issue.assigned_team == 'Technical Support' %}selected{% endif %}>Technical Support</option>
+              <option value="Billing" {% if issue.assigned_team == 'Billing' %}selected{% endif %}>Billing</option>
+              <option value="Security" {% if issue.assigned_team == 'Security' %}selected{% endif %}>Security</option>
+              <option value="General Inquiry" {% if issue.assigned_team == 'General Inquiry' or not issue.assigned_team %}selected{% endif %}>General Inquiry</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Urgency Level Dropdown -->
+        <div class="mb-3">
+          <label for="id-urgency-level" class="form-label mb-1" style="font-size: 12px; color: #94A3B8;">Urgency Level</label>
+          <select name="urgency_score" id="id-urgency-level" class="form-select" style="background-color: #0B0E14; border: 1px solid #1E2530; color: white;">
+            <option value="Low" {% if current_urgency_level == "Low" %}selected{% endif %}>Low</option>
+            <option value="Medium" {% if current_urgency_level == "Medium" %}selected{% endif %}>Medium</option>
+            <option value="High" {% if current_urgency_level == "High" %}selected{% endif %}>High</option>
+            <option value="Critical" {% if current_urgency_level == "Critical" %}selected{% endif %}>Critical</option>
+          </select>
+        </div>
+
+        <!-- Sentiment Score Numeric Input -->
+        <div class="mb-3">
+          <label for="id-sentiment-score" class="form-label mb-1" style="font-size: 12px; color: #94A3B8;">Sentiment Score (0.0 to 1.0)</label>
+          <input 
+            type="number" 
+            name="sentiment_score" 
+            id="id-sentiment-score" 
+            class="form-control data-mono" 
+            step="0.01" 
+            min="0.0" 
+            max="1.0" 
+            value="{{ issue.sentiment_score|default:'0.50' }}"
+            required
+            style="background-color: #0B0E14; border: 1px solid #1E2530; color: white;"
+          >
+        </div>
+
+        <!-- Status Change Dropdown -->
+        <div class="mb-4">
+          <label for="id-status-change" class="form-label mb-1" style="font-size: 12px; color: #94A3B8;">Status Change</label>
+          <select name="status" id="id-status-change" class="form-select" style="background-color: #0B0E14; border: 1px solid #1E2530; color: white;">
+            <option value="Open" {% if issue.status == "Open" %}selected{% endif %}>Open</option>
+            <option value="Escalated" {% if issue.status == "Escalated" %}selected{% endif %}>Escalated</option>
+            <option value="Resolved" {% if issue.status == "Resolved" %}selected{% endif %}>Resolved</option>
+          </select>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-grid gap-3">
+          <button type="submit" class="btn btn-update-apple fw-medium">
+            Update Issue
+          </button>
+          <button type="submit" class="btn fw-medium text-white" style="background-color: #10B981; border: none; border-radius: 12px; height: 48px; transition: background-color 0.15s ease;" onmouseover="this.style.backgroundColor='#059669'" onmouseout="this.style.backgroundColor='#10B981'" onclick="document.getElementById('id-status-change').value='Resolved';">
+            Mark as Resolved
+          </button>
+          <a href="{% url 'developer_dashboard' %}" class="text-center back-dashboard-link mt-1">
+            Back to Dashboard
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

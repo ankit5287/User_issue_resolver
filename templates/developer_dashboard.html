@@ -1,0 +1,563 @@
+{% extends 'base_developer.html' %}
+
+{% block title %}Developer Dashboard - User Issue Resolver Console{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Apple Badge overrides matching exact dashboard spec */
+  .badge-apple {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 650;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
+  }
+  
+  /* Teams */
+  .badge-team-tech { background-color: #1A2A3A; color: #5DADE2; border: 1px solid #2A3A5A !important; }
+  .badge-team-billing { background-color: #2A1A3A; color: #A78BFA; border: 1px solid #3A2A5A !important; }
+  .badge-team-general { background-color: #2A2A2A; color: #8B8F99; border: 1px solid #3A3A3A !important; }
+  .badge-team-security { background-color: #3A1A1A; color: #F87171; border: 1px solid #5A2A2A !important; }
+
+  /* Urgencies */
+  .badge-urgency-low { background-color: #1A3A2A; color: #7BC8A4; border: 1px solid #2A5A3A !important; }
+  .badge-urgency-medium { background-color: #3A3520; color: #F2C94C; border: 1px solid #5A5530 !important; }
+  .badge-urgency-high { background-color: #3A2A1A; color: #F2994A; border: 1px solid #5A3A2A !important; }
+  .badge-urgency-critical { background-color: #3A2A25; color: #FF7F50; border: 1px solid #5A3A35 !important; }
+
+  /* Statuses */
+  .badge-status-open { background-color: #1A2A35; color: #5DADE2; border: 1px solid #2A3A45 !important; }
+  .badge-status-escalated { background-color: #3A2A25; color: #FF7F50; border: 1px solid #5A3A35 !important; }
+  .badge-status-resolved { background-color: #1A3A2A; color: #7BC8A4; border: 1px solid #2A5A3A !important; }
+
+  /* Dashboard Grid */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  .second-row-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 992px) {
+    .dashboard-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .second-row-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Table styling */
+  .table-apple th {
+    background-color: #1E2128;
+    color: #8B8F99;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 14px 16px;
+    border-bottom: 2px solid #2A2D35;
+  }
+
+  .table-apple td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #2A2D35;
+    font-size: 13px;
+    color: #FFFFFF;
+    background-color: #1E2128;
+  }
+
+  .table-apple tr:hover td {
+    background-color: #2A2D35 !important;
+  }
+
+  .dot-indicator-small {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Buttons */
+  .btn-all-apple {
+    height: 36px;
+    border-radius: 9999px;
+    background-color: #5DADE2;
+    border: none;
+    padding-left: 16px;
+    padding-right: 16px;
+    font-weight: 500;
+    font-size: 13px;
+    color: #FFFFFF !important;
+    transition: background-color 0.15s ease;
+  }
+  .btn-all-apple:hover {
+    background-color: #4A9BD1;
+  }
+
+  .btn-filter-apple {
+    border-radius: 8px;
+    font-size: 13px;
+    height: 36px;
+    padding-left: 16px;
+    padding-right: 16px;
+    border: 1px solid #3A3D45;
+    color: #FFFFFF;
+    background-color: #2A2D35;
+    transition: background-color 0.15s ease;
+  }
+  .btn-filter-apple:hover {
+    background-color: #3A3D45;
+  }
+
+  .text-view-link {
+    color: #5DADE2;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 13px;
+    transition: color 0.15s ease;
+  }
+  .text-view-link:hover {
+    color: #4A9BD1;
+  }
+
+  /* Card Stat Indicator top line overrides */
+  .card-stat {
+    position: relative;
+  }
+  .card-stat-total::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background-color: #5DADE2; border-top-left-radius: 16px; border-top-right-radius: 16px; }
+  .card-stat-open::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background-color: #F2994A; border-top-left-radius: 16px; border-top-right-radius: 16px; }
+  .card-stat-escalated::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background-color: #FF7F50; border-top-left-radius: 16px; border-top-right-radius: 16px; }
+  .card-stat-resolved::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background-color: #7BC8A4; border-top-left-radius: 16px; border-top-right-radius: 16px; }
+
+  .filter-pill {
+    background-color: #1E2128;
+    color: #8B8F99;
+    border: 1px solid #2A2D35;
+    border-radius: 9999px;
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+  }
+  .filter-pill.active, .filter-pill:hover {
+    background-color: #FF7F50;
+    color: #FFFFFF;
+    border-color: #FF7F50;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+  <!-- TOP ANALYTICS ROW -->
+  <div class="dashboard-grid">
+    
+    <!-- CARD 1: Sentiment Overview -->
+    <div class="apple-card flex flex-col justify-between" style="background-color: #1E2128; border: 1px solid #2A2D35 !important; padding: 24px;">
+      <div>
+        <span class="uppercase tracking-wider fw-bold d-block" style="font-size: 14px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 20px;">Sentiment Overview</span>
+        <div class="d-flex justify-content-between" style="gap: 24px;">
+          <div class="text-center" style="flex: 1;">
+            <div style="width: 8px; height: 8px; background: #7BC8A4; border-radius: 50%; margin: 0 auto 8px;"></div>
+            <div style="font-size: 24px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;">{{ sentiment_data.positive }}</div>
+            <div style="font-size: 11px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Positive</div>
+          </div>
+          <div class="text-center" style="flex: 1;">
+            <div style="width: 8px; height: 8px; background: #FF7F50; border-radius: 50%; margin: 0 auto 8px;"></div>
+            <div style="font-size: 24px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;">{{ sentiment_data.negative }}</div>
+            <div style="font-size: 11px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Negative</div>
+          </div>
+          <div class="text-center" style="flex: 1;">
+            <div style="width: 8px; height: 8px; background: #F2C94C; border-radius: 50%; margin: 0 auto 8px;"></div>
+            <div style="font-size: 24px; font-weight: 700; color: #FFFFFF; margin-bottom: 4px;">{{ sentiment_data.neutral }}</div>
+            <div style="font-size: 11px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Neutral</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #2A2D35;">
+        <p style="font-size: 12px; color: #5A5E6A; margin: 0;">Based on NLP analysis of issue content</p>
+      </div>
+    </div>
+
+    <!-- CARD 2: Issue Priority (Bar Chart) -->
+    <div class="apple-card" style="background-color: #1E2128; border: 1px solid #2A2D35 !important; padding: 24px;">
+      <span class="uppercase tracking-wider fw-bold d-block" style="font-size: 14px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 20px;">Issue Priority</span>
+      <div style="height: 100px; position: relative;">
+        <canvas id="issuePriorityChart"></canvas>
+      </div>
+    </div>
+
+    <!-- CARD 3: Queue Metrics -->
+    <div class="apple-card flex flex-col justify-between" style="background-color: #1E2128; border: 1px solid #2A2D35 !important; padding: 24px;">
+      <div>
+        <span class="uppercase tracking-wider fw-bold d-block" style="font-size: 14px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 20px;">Queue Metrics</span>
+        <div class="display-6 fw-bold data-mono mb-2" style="font-size: 32px; color: #FFFFFF; font-weight: 700;">{{ total_count }}</div>
+      </div>
+      <div class="border-top border-light pt-2" style="border-top-color: #2A2D35 !important;">
+        <div class="d-flex justify-content-between text-xs data-mono" style="font-size: 11px;">
+          <span style="color: #F0B361; text-transform: uppercase; font-weight: 600;">Open: {{ open_count }} &uarr;</span>
+          <span style="color: #F07550; text-transform: uppercase; font-weight: 600;">Escalated: {{ escalated_count }} &rarr;</span>
+          <span style="color: #79AB7B; text-transform: uppercase; font-weight: 600;">Resolved: {{ resolved_count }} &darr;</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 4: Search Index -->
+    <div class="apple-card flex flex-col justify-between" style="background-color: #1E2128; border: 1px solid #2A2D35 !important; padding: 24px;">
+      <div>
+        <span class="uppercase tracking-wider fw-bold d-block" style="font-size: 14px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 20px;">Search Index</span>
+        <div class="display-6 fw-bold data-mono" style="font-size: 32px; color: #FFFFFF; font-weight: 700;">{{ search_keywords_count }}</div>
+        <div class="text-muted mt-1" style="font-size: 11px; color: #8B8F99;">Avg. {{ search_avg_issues }} issues per keyword</div>
+      </div>
+      <div class="mt-2 pt-2 border-top border-light" style="border-top-color: #2A2D35 !important;">
+        <div class="d-flex justify-content-between text-xs mb-1" style="font-size: 10px; color: #8B8F99; text-transform: uppercase; font-weight: 600;">
+          <span>Index Coverage</span>
+          <span>85%</span>
+        </div>
+        <div class="progress" style="height: 4px; border-radius: 9999px; background-color: #2A2D35;">
+          <div class="progress-bar" role="progressbar" style="width: 85%; background-color: #5DADE2;" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SECOND ROW (Issue Status Donut + Priority Queue Preview) -->
+  <div class="second-row-grid">
+    
+    <!-- CARD 5: Issue Status (Donut Chart) -->
+    <div class="apple-card" style="background-color: #1E2128; border: 1px solid #2A2D35 !important; padding: 24px;">
+      <span class="uppercase tracking-wider fw-bold d-block" style="font-size: 14px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.3px; margin-bottom: 20px;">Issue Status</span>
+      <div class="row align-items-center">
+        <div class="col-6">
+          <div style="height: 120px; position: relative;" class="d-flex align-items-center justify-content-center">
+            <canvas id="issueStatusChart" style="position: absolute; top: 0; left: 0; z-index: 1;"></canvas>
+            <div style="position: absolute; z-index: 2; font-size: 16px; font-weight: 700; color: #FFFFFF; pointer-events: none;">{{ total }}</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="d-flex flex-column gap-2 text-xs" style="font-size: 12px; color: #FFFFFF;">
+            <div class="d-flex align-items-center gap-2">
+              <span style="width: 8px; height: 8px; background-color: #F0B361; border-radius: 50%;"></span>
+              <span>Open</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span style="width: 8px; height: 8px; background-color: #F07550; border-radius: 50%;"></span>
+              <span>Escalated</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span style="width: 8px; height: 8px; background-color: #79AB7B; border-radius: 50%;"></span>
+              <span>Resolved</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 6: Priority Queue Preview -->
+    <div class="apple-card flex flex-col justify-between" style="background-color: #1E2128; border: 1px solid #2A2D35 !important; padding: 24px;">
+      <div>
+        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom border-light pb-2" style="border-bottom-color: #2A2D35 !important;">
+          <h6 class="fw-bold mb-0" style="font-size: 14px; color: #FFFFFF; font-weight: 600; letter-spacing: 0.3px;">Priority Queue</h6>
+          <!-- coral notification dot -->
+          <span style="width: 6px; height: 6px; background-color: #FF7F50; border-radius: 50%;"></span>
+        </div>
+        
+        <div class="d-flex flex-column gap-2">
+          {% for issue in priority_issues %}
+          <div class="d-flex align-items-center justify-content-between py-1.5 ps-2 border-start border-3" style="border-left-color: {% if issue.urgency_level == 'Critical' %}#FF7F50{% elif issue.urgency_level == 'High' %}#F2994A{% elif issue.urgency_level == 'Medium' %}#F2C94C{% else %}#7BC8A4{% endif %} !important;">
+            <div class="d-flex align-items-center gap-2 min-w-0">
+              <div class="min-w-0">
+                <span class="text-decoration-none fw-semibold d-block data-mono" style="font-size: 13px; color: #5DADE2;">#SR-{{ issue.id }}</span>
+                <p class="mb-0 text-truncate" style="font-size: 11px; max-width: 140px; color: #8B8F99;">{{ issue.subject|truncatechars:30 }}</p>
+              </div>
+            </div>
+            <div>
+              {% if issue.urgency_level == 'Critical' %}
+                <span class="badge-apple scale-75" style="background-color: #3A1A1A; color: #FF7F50; border: 1px solid #5A2A2A !important;">Critical</span>
+              {% elif issue.urgency_level == 'High' %}
+                <span class="badge-apple scale-75" style="background-color: #3A2A1A; color: #F2994A; border: 1px solid #5A3A2A !important;">High</span>
+              {% elif issue.urgency_level == 'Medium' %}
+                <span class="badge-apple scale-75" style="background-color: #3A3A1A; color: #F2C94C; border: 1px solid #5A5A2A !important;">Medium</span>
+              {% else %}
+                <span class="badge-apple scale-75" style="background-color: #1A3A2A; color: #7BC8A4; border: 1px solid #2A5A3A !important;">Low</span>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <div class="text-muted text-center py-3 text-xs" style="color: #5A5E6A;">Queue is currently clear.</div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="pt-2 border-top border-light mt-2 text-end" style="border-top-color: #2A2D35 !important;">
+        <a href="#table-section" class="text-decoration-none fw-semibold" style="font-size: 12px; color: #5DADE2;">View All Queue</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ISSUE TABLE SECTION (bottom, full width) -->
+  <div class="apple-card p-0 shadow-sm border-0 mb-5" id="table-section" style="border-color: #2A2D35 !important; background-color: #1E2128; padding: 24px;">
+    
+    <!-- Table Header Row -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center px-4 py-3 border-bottom border-light gap-3" style="border-bottom-color: #2A2D35 !important;">
+      <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <h5 class="fw-bold mb-0" style="font-size: 18px; color: #FFFFFF; font-weight: 700;">Recent Issues</h5>
+          <span class="badge" style="border-radius: 9999px; background-color: #2A2D35 !important; color: #8B8F99 !important; border: 1px solid #3A3D45 !important; font-size: 11px; font-weight: 600; padding: 4px 10px;">
+            {{ issues|length }}
+          </span>
+        </div>
+        <p class="mb-0 text-muted" style="font-size: 12px; color: #5A5E6A !important;">Showing last 5 issues</p>
+      </div>
+      
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- Search bar inside table header -->
+        <form action="{% url 'search_issues' %}" method="GET" class="m-0 p-0">
+          <input 
+            type="text" 
+            name="q"
+            placeholder="Search issues..." 
+            class="form-control"
+            style="height: 36px; width: 220px; border-radius: 9999px; background-color: #181A20; border: 1px solid #2A2D35; padding-left: 16px; font-size: 13px; color: #FFFFFF;"
+          >
+          <button type="submit" class="d-none">Search</button>
+        </form>
+        <a href="{% url 'all_issues' %}" class="btn btn-all-apple d-flex align-items-center justify-content-center">
+          View All
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-filter-apple d-flex align-items-center justify-content-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding-left: 14px; padding-right: 14px;">
+            <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M7.5 12l4.5 4.5m0 0l4.5-4.5M12 16.5V3"></path>
+            </svg>
+            Export
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width: 10px; height: 10px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
+            </svg>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end" style="background-color: #1E2128; border: 1px solid #2A2D35; border-radius: 8px; min-width: 160px;">
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2 text-white" href="{% url 'download_issues_excel' %}" style="font-size: 13px; padding: 8px 16px;" onmouseover="this.style.backgroundColor='#2A2D35'" onmouseout="this.style.backgroundColor='transparent'">
+                <svg fill="none" stroke="#34D399" stroke-width="2" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path>
+                </svg>
+                Excel (.xlsx)
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item d-flex align-items-center gap-2 text-white" href="{% url 'download_issues_csv' %}" style="font-size: 13px; padding: 8px 16px;" onmouseover="this.style.backgroundColor='#2A2D35'" onmouseout="this.style.backgroundColor='transparent'">
+                <svg fill="none" stroke="#5DADE2" stroke-width="2" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"></path>
+                </svg>
+                CSV (.csv)
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Responsive Table -->
+    <div class="table-responsive">
+      <table class="table table-apple align-middle mb-0" style="background-color: #1E2128;">
+        <thead>
+          <tr>
+            <th scope="col" class="ps-4" style="width: 40px;"><input type="checkbox" class="form-check-input" style="background-color: #181A20; border-color: #2A2D35;"></th>
+            <th scope="col">ID</th>
+            <th scope="col">Subject</th>
+            <th scope="col">User Email</th>
+            <th scope="col">Assigned Team</th>
+            <th scope="col">Urgency</th>
+            <th scope="col">Sentiment</th>
+            <th scope="col">Status</th>
+            <th scope="col">Created At</th>
+            <th scope="col" class="pe-4 text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="data-mono text-sm">
+          {% for issue in issues %}
+          <tr>
+            <td class="ps-4"><input type="checkbox" class="form-check-input" style="background-color: #181A20; border-color: #2A2D35;"></td>
+            <td style="font-size: 12px; color: #5A5E6A;">#{{ issue.id }}</td>
+            <td style="font-size: 14px; color: #FFFFFF; font-weight: 500;">{{ issue.subject|truncatechars:35 }}</td>
+            <td style="font-size: 13px; color: #8B8F99;">{{ issue.customer_email }}</td>
+            <td>
+              {% if issue.assigned_team == 'Technical Support' %}
+                <span class="badge-apple badge-team-tech">Technical Support</span>
+              {% elif issue.assigned_team == 'Billing' %}
+                <span class="badge-apple badge-team-billing">Billing</span>
+              {% elif issue.assigned_team == 'Security' %}
+                <span class="badge-apple badge-team-security">Security</span>
+              {% else %}
+                <span class="badge-apple badge-team-general">General Inquiry</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if issue.urgency_level == 'Critical' %}
+                <span class="badge-apple" style="background-color: #3A1A1A; color: #FF7F50; border: 1px solid #5A2A2A !important;">Critical</span>
+              {% elif issue.urgency_level == 'High' %}
+                <span class="badge-apple" style="background-color: #3A2A1A; color: #F2994A; border: 1px solid #5A3A2A !important;">High</span>
+              {% elif issue.urgency_level == 'Medium' %}
+                <span class="badge-apple" style="background-color: #3A3A1A; color: #F2C94C; border: 1px solid #5A5A2A !important;">Medium</span>
+              {% else %}
+                <span class="badge-apple" style="background-color: #1A3A2A; color: #7BC8A4; border: 1px solid #2A5A3A !important;">Low</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2" style="max-width: 80px;">
+                {% with percent=issue.sentiment_score|add:1|default:1.0 %}
+                <span style="font-size: 11px; color: #FFFFFF;">
+                  {{ issue.sentiment_category }}
+                </span>
+                <div class="progress w-100" style="height: 4px; border-radius: 2px; background-color: #2A2D35;">
+                  <div class="progress-bar" role="progressbar" 
+                       style="width: {% widthratio percent 2 100 %}%; background-color: {% if issue.sentiment_category == 'Negative' %}#F87171{% elif issue.sentiment_category == 'Neutral' %}#F2C94C{% else %}#7BC8A4{% endif %};" 
+                       aria-valuenow="{% widthratio percent 2 100 %}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                {% endwith %}
+              </div>
+            </td>
+            <td>
+              {% if issue.status == 'Open' %}
+                <span class="badge-apple badge-status-open">Open</span>
+              {% elif issue.status == 'Resolved' %}
+                <span class="badge-apple badge-status-resolved">Resolved</span>
+              {% elif issue.status == 'Escalated' %}
+                <span class="badge-apple badge-status-escalated">Escalated</span>
+              {% endif %}
+            </td>
+            <td style="font-size: 13px; color: #8B8F99;">{{ issue.created_at|date:"Y-m-d H:i" }}</td>
+            <td class="pe-4 text-end">
+              <a href="{% url 'issue_detail' issue.id %}" class="text-view-link">
+                View
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="10" class="text-center py-5 text-muted" style="color: #5A5E6A; background-color: #1E2128;">
+              No issues found in the queue database.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js via CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    
+    // 1. Issue Priority Horizontal Bar Chart
+    const ctxPriority = document.getElementById('issuePriorityChart').getContext('2d');
+    new Chart(ctxPriority, {
+      type: 'bar',
+      data: {
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        datasets: [{
+          data: [
+            {{ priority_data.Critical|default:"0" }},
+            {{ priority_data.High|default:"0" }},
+            {{ priority_data.Medium|default:"0" }},
+            {{ priority_data.Low|default:"0" }}
+          ],
+          backgroundColor: ['#FF7F50', '#F2994A', '#F2C94C', '#7BC8A4'],
+          barThickness: 12,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { enabled: true }
+        },
+        scales: {
+          x: { 
+            display: false, 
+            grid: { color: '#2A2D35' },
+            border: { color: '#2A2D35' }
+          },
+          y: { 
+            grid: { color: '#2A2D35' },
+            border: { color: '#2A2D35' },
+            ticks: {
+              color: '#8B8F99',
+              font: { size: 12, weight: '500' }
+            }
+          }
+        }
+      }
+    });
+
+    // 2. Issue Status Donut Chart
+    const ctxStatus = document.getElementById('issueStatusChart').getContext('2d');
+    
+    // Extract real quantities from Django context, default to placeholders if empty
+    const openCount = {{ status_counts.Open|default:"0" }};
+    const escalatedCount = {{ status_counts.Escalated|default:"0" }};
+    const resolvedCount = {{ status_counts.Resolved|default:"0" }};
+    
+    const chartData = (openCount + escalatedCount + resolvedCount === 0) 
+      ? [1, 0, 0] // fallback placeholder data if DB is empty
+      : [openCount, escalatedCount, resolvedCount];
+
+    new Chart(ctxStatus, {
+      type: 'doughnut',
+      data: {
+        labels: ['Open', 'Escalated', 'Resolved'],
+        datasets: [{
+          data: chartData,
+          backgroundColor: ['#F0B361', '#F07550', '#79AB7B'],
+          borderWidth: 0,
+          borderRadius: 6,
+          spacing: 6,
+          hoverOffset: 4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '70%',
+        plugins: {
+          legend: { 
+            display: false 
+          },
+          tooltip: { enabled: true }
+        }
+      }
+    });
+
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'issues/base.html' %}
+
+{% block title %}Issue Queue - User Issue Resolver{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 text-dark font-weight-bold">Support Issues Queue</h5>
+        <a href="{% url 'submit_issue' %}" class="btn btn-sm btn-primary">Submit New Issue</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th scope="col" class="ps-4">ID</th>
+                <th scope="col">Email</th>
+                <th scope="col">Urgency Score</th>
+                <th scope="col">Status</th>
+                <th scope="col">Created At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for issue in issues %}
+              <tr>
+                <td class="ps-4 font-weight-bold">#{{ issue.id }}</td>
+                <td>
+                  <div class="fw-bold text-dark">{{ issue.customer_email }}</div>
+                </td>
+                <td>
+                  <span class="badge bg-secondary">{{ issue.urgency_score|floatformat:2 }}</span>
+                </td>
+                <td>
+                  {% if issue.status == 'Open' %}
+                    <span class="badge bg-primary">Open</span>
+                  {% elif issue.status == 'Resolved' %}
+                    <span class="badge bg-success">Resolved</span>
+                  {% elif issue.status == 'Escalated' %}
+                    <span class="badge bg-danger">Escalated</span>
+                  {% else %}
+                    <span class="badge bg-secondary">{{ issue.status }}</span>
+                  {% endif %}
+                </td>
+                <td class="text-muted small">{{ issue.created_at|date:"Y-m-d H:i" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="text-center py-5 text-muted">
+                  <p class="mb-1">No support issues found in the database.</p>
+                  <a href="{% url 'submit_issue' %}" class="btn btn-sm btn-outline-primary mt-2">Submit one now</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

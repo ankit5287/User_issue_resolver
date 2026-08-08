@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}User Issue Resolver User Support{% endblock %}</title>
+  <!-- Bootstrap 5 CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <style>
+    :root {
+      --apple-bg: #0B0E14;
+      --apple-card: #151A25;
+      --apple-text: #FFFFFF;
+      --apple-secondary: #94A3B8;
+      --apple-tertiary: #64748B;
+      --apple-blue: #60A5FA;
+      --apple-success: #34D399;
+      --apple-warning: #FB923C;
+      --apple-danger: #F87171;
+      --apple-border: #1E2530;
+      --apple-input-bg: #0B0E14;
+      --apple-input-border: #1E2530;
+      --apple-hover: #1E2530;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--apple-bg);
+      color: var(--apple-text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .navbar-user {
+      background-color: #0F131A !important;
+      border-bottom: 1px solid var(--apple-border);
+      height: 64px;
+    }
+
+    .navbar-brand {
+      color: var(--apple-text) !important;
+      font-weight: 700;
+      font-size: 19px;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-link {
+      color: var(--apple-secondary) !important;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.15s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--apple-blue) !important;
+    }
+
+    .apple-card {
+      background-color: var(--apple-card);
+      border-radius: 16px;
+      border: 1px solid var(--apple-border);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      padding: 32px;
+    }
+
+    .form-control, .form-select {
+      background-color: var(--apple-input-bg) !important;
+      border: 1px solid var(--apple-input-border) !important;
+      color: var(--apple-text) !important;
+      border-radius: 8px !important;
+      height: 48px;
+      font-size: 14px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .form-control::placeholder {
+      color: var(--apple-tertiary) !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: var(--apple-blue) !important;
+      box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.25) !important;
+      outline: none !important;
+    }
+
+    /* Django templates switcher tags */
+    django-tag, .django-only {
+      display: none !important;
+    }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+  <!-- User Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark navbar-user shadow-sm py-0">
+    <div class="container" style="max-width: 1140px;">
+      <a class="navbar-brand" href="{% url 'landing' %}">User Issue Resolver</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto gap-3 align-items-center">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'landing' %}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#track-section">Track Issue</a>
+          </li>
+          {% if user.is_authenticated %}
+          <li class="nav-item">
+            <span class="nav-link text-white-50" style="font-size: 13px;">Welcome, {{ user.username }}</span>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}" style="color: #8B8F99 !important; font-size: 13px; font-weight: 500;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#8B8F99'">Logout</a>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'login' %}" style="color: #60A5FA !important; font-size: 13px; font-weight: 500;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='#60A5FA'">Login</a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Alert System -->
+  <div class="container mt-4" style="max-width: 1140px;">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show border" role="alert" style="border-radius: 12px; background-color: var(--apple-card); color: var(--apple-text); border-color: var(--apple-border);">
+          {{ message }}
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <!-- Content Block -->
+  <main class="container py-5" style="max-width: 1140px;">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

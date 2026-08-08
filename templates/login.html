@@ -1,0 +1,211 @@
+{% extends 'base_user.html' %}
+
+{% block title %}Sign In - User Issue Resolver{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Login specific styles to ensure exact palette overrides */
+  body {
+    background-color: #181A20 !important;
+  }
+
+  .login-container {
+    max-width: 420px;
+    margin: 80px auto;
+  }
+
+  .login-card {
+    background-color: #1E2128 !important;
+    border: 1px solid #2A2D35 !important;
+    border-radius: 16px !important;
+    padding: 32px !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  }
+
+  .role-btn {
+    height: 44px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+  }
+
+  .role-btn-unselected {
+    background-color: #181A20 !important;
+    border: 1px solid #2A2D35 !important;
+    color: #8B8F99 !important;
+  }
+
+  .role-btn-developer.selected {
+    background-color: #5DADE2 !important;
+    color: #FFFFFF !important;
+    border: 1px solid #5DADE2 !important;
+  }
+
+  .role-btn-user.selected {
+    background-color: #7BC8A4 !important;
+    color: #FFFFFF !important;
+    border: 1px solid #7BC8A4 !important;
+  }
+
+  .login-input {
+    background-color: #181A20 !important;
+    border: 1px solid #2A2D35 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px !important;
+    height: 48px;
+    font-size: 14px;
+  }
+
+  .login-input::placeholder {
+    color: #5A5E6A !important;
+  }
+
+  .login-input:focus {
+    border-color: #5DADE2 !important;
+    box-shadow: 0 0 0 2px rgba(93, 173, 226, 0.25) !important;
+  }
+
+  .btn-login-submit {
+    height: 48px;
+    background-color: #5DADE2 !important;
+    color: #FFFFFF !important;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 12px !important;
+    border: none !important;
+    transition: background-color 0.15s ease;
+  }
+
+  .btn-login-submit:hover {
+    background-color: #4A9BD1 !important;
+  }
+
+  .login-error-alert {
+    background-color: #3A1A1A !important;
+    border: 1px solid #5A2A2A !important;
+    color: #F87171 !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    font-size: 13px;
+    font-weight: 500;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+
+  <!-- Main Login Card -->
+  <div class="card login-card border-0">
+    <h4 class="text-center fw-bold mb-4" style="color: #FFFFFF; font-size: 20px; letter-spacing: -0.5px;">Sign In to User Issue Resolver</h4>
+    
+    <!-- Error area -->
+    {% if error_message %}
+    <div class="login-error-alert mb-3 text-center">
+      {{ error_message }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'login' %}">
+      {% csrf_token %}
+      
+      <!-- hidden redirect next parameter -->
+      {% if next %}
+        <input type="hidden" name="next" value="{{ next }}">
+      {% endif %}
+
+      <!-- hidden selected role input -->
+      <input type="hidden" name="role" id="role-input" value="{{ role|default:'developer' }}">
+
+      <!-- Role selection buttons -->
+      <div class="mb-4">
+        <label class="form-label fw-semibold mb-2" style="font-size: 12px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Select Portal Role</label>
+        <div class="d-flex gap-2">
+          <!-- Developer role selector -->
+          <div type="button" id="role-dev-btn" class="role-btn role-btn-developer {% if role == 'developer' or not role %}selected{% else %}role-btn-unselected{% endif %}" onclick="selectRole('developer')">
+            Developer
+          </div>
+          <!-- User role selector -->
+          <div type="button" id="role-cust-btn" class="role-btn role-btn-user {% if role == 'user' %}selected{% else %}role-btn-unselected{% endif %}" onclick="selectRole('user')">
+            User
+          </div>
+        </div>
+      </div>
+
+      <!-- Username Input -->
+      <div class="mb-3">
+        <label for="username" class="form-label fw-semibold mb-2" style="font-size: 12px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Username</label>
+        <input 
+          type="text" 
+          name="username" 
+          id="username" 
+          class="form-control login-input" 
+          placeholder="Enter username" 
+          value="{{ username_val|default:'' }}"
+          required
+        >
+      </div>
+
+      <!-- Password Input -->
+      <div class="mb-4">
+        <label for="password" class="form-label fw-semibold mb-2" style="font-size: 12px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Password</label>
+        <input 
+          type="password" 
+          name="password" 
+          id="password" 
+          class="form-control login-input" 
+          placeholder="Enter password" 
+          required
+        >
+      </div>
+
+      <!-- Submit button -->
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-login-submit w-100">
+          Sign In
+        </button>
+      </div>
+
+      <!-- Sign Up link (Only for User role) -->
+      <div id="signup-link-container" class="mt-3 text-center" style="display: {% if role == 'user' %}block{% else %}none{% endif %};">
+        <span class="small" style="color: #8B8F99;">Don't have an account? </span>
+        <a href="{% url 'signup' %}" class="small fw-semibold text-decoration-none" style="color: #7BC8A4;">Sign Up</a>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Small Footer Text -->
+  <p class="text-center mt-3 small" style="color: #5A5E6A;">User Issue Resolver Support System</p>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function selectRole(roleVal) {
+    // Set hidden input value
+    document.getElementById('role-input').value = roleVal;
+
+    const devBtn = document.getElementById('role-dev-btn');
+    const custBtn = document.getElementById('role-cust-btn');
+    const signupContainer = document.getElementById('signup-link-container');
+
+    if (roleVal === 'developer') {
+      devBtn.className = 'role-btn role-btn-developer selected';
+      custBtn.className = 'role-btn role-btn-user role-btn-unselected';
+      signupContainer.style.display = 'none';
+    } else {
+      devBtn.className = 'role-btn role-btn-developer role-btn-unselected';
+      custBtn.className = 'role-btn role-btn-user selected';
+      signupContainer.style.display = 'block';
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base_developer.html' %}
+
+{% block title %}Analytics Dashboard - User Issue Resolver Console{% endblock %}
+
+{% block extra_css %}
+<style>
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 992px) {
+    .analytics-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .chart-card {
+    background-color: #1E2128;
+    border: 1px solid #2A2D35;
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .chart-canvas-container {
+    position: relative;
+    height: 260px;
+    width: 100%;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+  
+  <!-- Header title row -->
+  <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3" style="border-bottom-color: #2A2D35 !important;">
+    <div>
+      <h4 class="fw-bold mb-1" style="color: #FFFFFF; font-size: 22px; letter-spacing: -0.5px;">Analytics Dashboard</h4>
+      <p class="mb-0 text-muted" style="font-size: 13px; color: #8B8F99;">Real-time interactive telemetry reports rendered natively on the client console.</p>
+    </div>
+    <a href="{% url 'developer_dashboard' %}" class="btn btn-filter-apple d-flex align-items-center justify-content-center text-decoration-none" style="background-color: #2A2D35; border: 1px solid #3A3D45; color: #FFFFFF; padding: 6px 16px; border-radius: 8px;">
+      Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Analytics Grid -->
+  <div class="analytics-grid">
+    
+    <!-- Chart 1: Issue Volume Trend -->
+    <div class="chart-card">
+      <h6 class="fw-bold mb-3" style="color: #FFFFFF; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Issue Volume Trend</h6>
+      <div class="chart-canvas-container d-flex justify-content-center align-items-center">
+        <img src="{{ issue_volume_url }}" alt="Issue Volume Trend" class="img-fluid rounded" style="max-height: 100%; object-fit: contain;">
+      </div>
+    </div>
+
+    <!-- Chart 2: Sentiment Distribution -->
+    <div class="chart-card">
+      <h6 class="fw-bold mb-3" style="color: #FFFFFF; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Sentiment Distribution</h6>
+      <div class="chart-canvas-container d-flex justify-content-center align-items-center">
+        <img src="{{ sentiment_dist_url }}" alt="Sentiment Distribution" class="img-fluid rounded" style="max-height: 100%; object-fit: contain;">
+      </div>
+    </div>
+
+    <!-- Chart 3: Urgency Breakdown -->
+    <div class="chart-card">
+      <h6 class="fw-bold mb-3" style="color: #FFFFFF; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Urgency Breakdown</h6>
+      <div class="chart-canvas-container d-flex justify-content-center align-items-center">
+        <div style="position: relative; width: 220px; height: 220px;">
+          <img src="{{ urgency_breakdown_url }}" alt="Urgency Breakdown" class="img-fluid rounded" style="width: 100%; height: 100%; object-fit: contain;">
+          <!-- Center overlay text exactly matching dashboard design -->
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; background: rgba(30, 33, 40, 0.7); border-radius: 50%; width: 60px; height: 60px; display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-size: 18px; font-weight: 700; color: #FFFFFF; line-height: 1;">{{ urgency_total }}</div>
+            <div style="font-size: 9px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px;">Total</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart 4: Resolution Time Analysis -->
+    <div class="chart-card">
+      <h6 class="fw-bold mb-3" style="color: #FFFFFF; font-size: 13px; letter-spacing: 0.5px; text-transform: uppercase;">Resolution Time Analysis</h6>
+      <div class="chart-canvas-container d-flex justify-content-center align-items-center">
+        <img src="{{ resolution_time_url }}" alt="Resolution Time Analysis" class="img-fluid rounded" style="max-height: 100%; object-fit: contain;">
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends 'base_developer.html' %}
+
+{% block title %}Team Queues - User Issue Resolver Console{% endblock %}
+
+{% block extra_css %}
+<style>
+  .team-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  @media (max-width: 1200px) {
+    .team-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 768px) {
+    .team-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .team-card {
+    background-color: #1E2128;
+    border: 1px solid #2A2D35;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 220px;
+  }
+  .btn-view-team {
+    height: 38px;
+    background-color: #2A2D35 !important;
+    border: 1px solid #3A3D45 !important;
+    border-radius: 8px !important;
+    color: #FFFFFF !important;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background-color 0.15s ease;
+  }
+  .btn-view-team:hover {
+    background-color: #3A3D45 !important;
+  }
+  /* Badges matching developer dashboard specs */
+  .badge-team-tech { background-color: #1A2A3A; color: #5DADE2; border: 1px solid #2A3A5A !important; }
+  .badge-team-billing { background-color: #2A1A3A; color: #A78BFA; border: 1px solid #3A2A5A !important; }
+  .badge-team-general { background-color: #2A2A2A; color: #8B8F99; border: 1px solid #3A3A3A !important; }
+  .badge-team-security { background-color: #3A1A1A; color: #F87171; border: 1px solid #5A2A2A !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+
+  <!-- Title Row -->
+  <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3" style="border-bottom-color: #2A2D35 !important;">
+    <div>
+      <h4 class="fw-bold mb-1" style="color: #FFFFFF; font-size: 22px; letter-spacing: -0.5px;">Team Queues</h4>
+      <p class="mb-0 text-muted" style="font-size: 13px; color: #8B8F99;">Team-specific issue queues for support specialists.</p>
+    </div>
+  </div>
+
+  <!-- Cards Grid -->
+  <div class="team-grid">
+    
+    <!-- Card 1: Technical Support -->
+    <div class="team-card">
+      <div>
+        <div class="mb-3">
+          <span class="badge-apple badge-team-tech">Technical Support</span>
+        </div>
+        <div class="fw-bold text-white mb-1" style="font-size: 32px; line-height: 1;">{{ tech_count }}</div>
+        <div style="font-size: 13px; color: #8B8F99;">Active Issues</div>
+      </div>
+      <a href="{% url 'all_issues' %}?team=Technical+Support" class="btn btn-view-team w-100 mt-4 d-flex align-items-center justify-content-center text-decoration-none">
+        View Issues
+      </a>
+    </div>
+
+    <!-- Card 2: Billing -->
+    <div class="team-card">
+      <div>
+        <div class="mb-3">
+          <span class="badge-apple badge-team-billing">Billing</span>
+        </div>
+        <div class="fw-bold text-white mb-1" style="font-size: 32px; line-height: 1;">{{ billing_count }}</div>
+        <div style="font-size: 13px; color: #8B8F99;">Active Issues</div>
+      </div>
+      <a href="{% url 'all_issues' %}?team=Billing" class="btn btn-view-team w-100 mt-4 d-flex align-items-center justify-content-center text-decoration-none">
+        View Issues
+      </a>
+    </div>
+
+    <!-- Card 3: Security -->
+    <div class="team-card">
+      <div>
+        <div class="mb-3">
+          <span class="badge-apple badge-team-security">Security</span>
+        </div>
+        <div class="fw-bold text-white mb-1" style="font-size: 32px; line-height: 1;">{{ security_count }}</div>
+        <div style="font-size: 13px; color: #8B8F99;">Active Issues</div>
+      </div>
+      <a href="{% url 'all_issues' %}?team=Security" class="btn btn-view-team w-100 mt-4 d-flex align-items-center justify-content-center text-decoration-none">
+        View Issues
+      </a>
+    </div>
+
+    <!-- Card 4: General Inquiry -->
+    <div class="team-card">
+      <div>
+        <div class="mb-3">
+          <span class="badge-apple badge-team-general">General Inquiry</span>
+        </div>
+        <div class="fw-bold text-white mb-1" style="font-size: 32px; line-height: 1;">{{ general_count }}</div>
+        <div style="font-size: 13px; color: #8B8F99;">Active Issues</div>
+      </div>
+      <a href="{% url 'all_issues' %}?team=General+Inquiry" class="btn btn-view-team w-100 mt-4 d-flex align-items-center justify-content-center text-decoration-none">
+        View Issues
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends 'base_user.html' %}
+
+{% block title %}Sign Up - User Issue Resolver{% endblock %}
+
+{% block extra_css %}
+<style>
+  body {
+    background-color: #181A20 !important;
+  }
+
+  .login-container {
+    max-width: 420px;
+    margin: 60px auto;
+  }
+
+  .login-card {
+    background-color: #1E2128 !important;
+    border: 1px solid #2A2D35 !important;
+    border-radius: 16px !important;
+    padding: 32px !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  }
+
+  .login-input {
+    background-color: #181A20 !important;
+    border: 1px solid #2A2D35 !important;
+    color: #FFFFFF !important;
+    border-radius: 8px !important;
+    height: 48px;
+    font-size: 14px;
+  }
+
+  .login-input::placeholder {
+    color: #5A5E6A !important;
+  }
+
+  .login-input:focus {
+    border-color: #7BC8A4 !important;
+    box-shadow: 0 0 0 2px rgba(123, 200, 164, 0.25) !important;
+  }
+
+  .btn-signup-submit {
+    height: 48px;
+    background-color: #7BC8A4 !important;
+    color: #FFFFFF !important;
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 12px !important;
+    border: none !important;
+    transition: background-color 0.15s ease;
+  }
+
+  .btn-signup-submit:hover {
+    background-color: #61A384 !important;
+  }
+
+  .login-error-alert {
+    background-color: #3A1A1A !important;
+    border: 1px solid #5A2A2A !important;
+    color: #F87171 !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    font-size: 13px;
+    font-weight: 500;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+
+  <!-- Main Signup Card -->
+  <div class="card login-card border-0">
+    <h4 class="text-center fw-bold mb-4" style="color: #FFFFFF; font-size: 20px; letter-spacing: -0.5px;">Create an Account</h4>
+    
+    <!-- Error area -->
+    {% if error_message %}
+    <div class="login-error-alert mb-3 text-center">
+      {{ error_message }}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'signup' %}">
+      {% csrf_token %}
+
+      <!-- Username Input -->
+      <div class="mb-3">
+        <label for="username" class="form-label fw-semibold mb-2" style="font-size: 12px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Username</label>
+        <input 
+          type="text" 
+          name="username" 
+          id="username" 
+          class="form-control login-input" 
+          placeholder="Choose a username" 
+          value="{{ username_val|default:'' }}"
+          required
+        >
+      </div>
+
+      <!-- Email Input -->
+      <div class="mb-3">
+        <label for="email" class="form-label fw-semibold mb-2" style="font-size: 12px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Email Address</label>
+        <input 
+          type="email" 
+          name="email" 
+          id="email" 
+          class="form-control login-input" 
+          placeholder="Enter your email" 
+          value="{{ email_val|default:'' }}"
+          required
+        >
+      </div>
+
+      <!-- Password Input -->
+      <div class="mb-3">
+        <label for="password" class="form-label fw-semibold mb-2" style="font-size: 12px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Password</label>
+        <input 
+          type="password" 
+          name="password" 
+          id="password" 
+          class="form-control login-input" 
+          placeholder="Create a password" 
+          required
+        >
+      </div>
+
+      <!-- Confirm Password Input -->
+      <div class="mb-4">
+        <label for="confirm_password" class="form-label fw-semibold mb-2" style="font-size: 12px; color: #8B8F99; text-transform: uppercase; letter-spacing: 0.5px;">Confirm Password</label>
+        <input 
+          type="password" 
+          name="confirm_password" 
+          id="confirm_password" 
+          class="form-control login-input" 
+          placeholder="Re-enter password" 
+          required
+        >
+      </div>
+
+      <!-- Submit button -->
+      <div class="d-grid gap-2">
+        <button type="submit" class="btn btn-signup-submit w-100">
+          Sign Up
+        </button>
+      </div>
+
+      <!-- Redirect to Login option -->
+      <div class="mt-3 text-center">
+        <span class="small" style="color: #8B8F99;">Already have an account? </span>
+        <a href="{% url 'login' %}" class="small fw-semibold text-decoration-none" style="color: #5DADE2;">Sign In</a>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Small Footer Text -->
+  <p class="text-center mt-3 small" style="color: #5A5E6A;">User Issue Resolver Support System</p>
+
+</div>
+{% endblock %}
