@@ -59,18 +59,21 @@ TEMPLATES = [
 WSGI_APPLICATION = 'smartroute.wsgi.application'
 
 # Database
-IS_VERCEL = 'VERCEL' in os.environ
+IS_VERCEL = 'VERCEL' in os.environ or 'VERCEL_ENV' in os.environ or 'AWS_EXECUTION_ENV' in os.environ
 
 if IS_VERCEL:
     DB_PATH = Path('/tmp/db.sqlite3')
     if not DB_PATH.exists():
         SEED_DB = BASE_DIR / 'db.sqlite3'
         if SEED_DB.exists():
-            shutil.copyfile(SEED_DB, DB_PATH)
+            try:
+                shutil.copyfile(SEED_DB, DB_PATH)
+            except Exception:
+                pass
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': DB_PATH,
+            'NAME': DB_PATH if DB_PATH.exists() else (BASE_DIR / 'db.sqlite3'),
         }
     }
 else:
