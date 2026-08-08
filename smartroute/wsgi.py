@@ -5,4 +5,4 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smartroute.settings')
 
 application = get_wsgi_application()
 app = application
-
+handler = application

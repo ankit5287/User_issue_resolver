@@ -1,5 +1,6 @@
 import os
 import shutil
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -59,12 +60,18 @@ TEMPLATES = [
 WSGI_APPLICATION = 'smartroute.wsgi.application'
 
 # Database
-IS_VERCEL = 'VERCEL' in os.environ or 'VERCEL_ENV' in os.environ or 'AWS_EXECUTION_ENV' in os.environ
+IS_VERCEL = (
+    'VERCEL' in os.environ 
+    or 'VERCEL_ENV' in os.environ 
+    or 'NOW_REGION' in os.environ
+    or 'AWS_EXECUTION_ENV' in os.environ
+    or not sys.platform.startswith('win')
+)
 
 if IS_VERCEL:
     DB_PATH = Path('/tmp/db.sqlite3')
+    SEED_DB = BASE_DIR / 'db.sqlite3'
     if not DB_PATH.exists():
-        SEED_DB = BASE_DIR / 'db.sqlite3'
         if SEED_DB.exists():
             try:
                 shutil.copyfile(SEED_DB, DB_PATH)
@@ -73,7 +80,7 @@ if IS_VERCEL:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': DB_PATH if DB_PATH.exists() else (BASE_DIR / 'db.sqlite3'),
+            'NAME': DB_PATH if DB_PATH.exists() else SEED_DB,
         }
     }
 else:
