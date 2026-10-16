@@ -22,22 +22,32 @@ from .search_manager import issue_search_index
 from django.db.models import Count
 
 
-# Configure Matplotlib non-interactive Agg backend
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+# Configure Matplotlib non-interactive Agg backend safely (with fallback for serverless environments)
+try:
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
+    plt = None
 
 def apply_dark_theme():
     """Configure matplotlib rcParams to use high-contrast dark theme matching dashboard style."""
-    plt.rcParams['figure.facecolor'] = '#1E2128'
-    plt.rcParams['axes.facecolor'] = '#1E2128'
-    plt.rcParams['axes.edgecolor'] = '#2A2D35'
-    plt.rcParams['axes.labelcolor'] = '#FFFFFF'
-    plt.rcParams['text.color'] = '#FFFFFF'
-    plt.rcParams['xtick.color'] = '#8B8F99'
-    plt.rcParams['ytick.color'] = '#8B8F99'
-    plt.rcParams['grid.color'] = '#2A2D35'
-    plt.rcParams['grid.alpha'] = 0.5
+    if not HAS_MATPLOTLIB or plt is None:
+        return
+    try:
+        plt.rcParams['figure.facecolor'] = '#1E2128'
+        plt.rcParams['axes.facecolor'] = '#1E2128'
+        plt.rcParams['axes.edgecolor'] = '#2A2D35'
+        plt.rcParams['axes.labelcolor'] = '#FFFFFF'
+        plt.rcParams['text.color'] = '#FFFFFF'
+        plt.rcParams['xtick.color'] = '#8B8F99'
+        plt.rcParams['ytick.color'] = '#8B8F99'
+        plt.rcParams['grid.color'] = '#2A2D35'
+        plt.rcParams['grid.alpha'] = 0.5
+    except Exception:
+        pass
 
 def landing_view(request):
     """Redirect landing root to user portal."""
@@ -376,81 +386,79 @@ def analytics_view(request):
         
     issues = Issue.objects.all()
     
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
-    import numpy as np
-    import pandas as pd
-    from django.conf import settings
-    import os
-    
-    apply_dark_theme()
-    
-    charts_dir = os.path.join(settings.BASE_DIR, 'issues', 'static', 'charts')
-    os.makedirs(charts_dir, exist_ok=True)
-    
-    # ----------------------------------------------------
-    # CHART 1: Issue Volume Trend (last 7 days)
-    # ----------------------------------------------------
-    plt.figure(figsize=(8, 4))
-    if issues.exists():
-        df = pd.DataFrame(list(issues.values('created_at')))
-        df['date'] = pd.to_datetime(df['created_at']).dt.date
-        counts = df['date'].value_counts().sort_index()
-        if not counts.empty:
-            plt.plot(counts.index.astype(str), counts.values, color='#5DADE2', marker='o', linewidth=2)
-            plt.fill_between(counts.index.astype(str), counts.values, color='#5DADE2', alpha=0.25)
-    plt.title('Issue Volume Trend')
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.savefig(os.path.join(charts_dir, 'issue_volume.png'), dpi=100)
-    plt.close()
-
-    # ----------------------------------------------------
-    # CHART 2: Sentiment Distribution
-    # ----------------------------------------------------
-    plt.figure(figsize=(8, 4))
-    pos = issues.filter(sentiment_score__gte=0.05).count()
-    neg = issues.filter(sentiment_score__lte=-0.05).count()
-    neu = issues.filter(sentiment_score__gt=-0.05, sentiment_score__lt=0.05).count()
-    plt.barh(['Neutral', 'Negative', 'Positive'], [neu, neg, pos], color=['#F0B361', '#F07550', '#79AB7B'])
-    plt.title('Sentiment Distribution')
-    plt.tight_layout()
-    plt.savefig(os.path.join(charts_dir, 'sentiment_distribution.png'), dpi=100)
-    plt.close()
-
-    # ----------------------------------------------------
-    # CHART 3: Urgency Breakdown
-    # ----------------------------------------------------
-    plt.figure(figsize=(6, 6))
-    low = issues.filter(urgency_level='Low').count()
-    med = issues.filter(urgency_level='Medium').count()
-    high = issues.filter(urgency_level='High').count()
     crit = issues.filter(urgency_level='Critical').count()
-    data = [crit, high, med, low]
-    if sum(data) > 0:
-        plt.pie(data, labels=['Critical', 'High', 'Medium', 'Low'], colors=['#FF7F50', '#F07550', '#F0B361', '#79AB7B'], autopct='%1.1f%%', startangle=90, wedgeprops={'width': 0.4})
-    plt.title('Urgency Breakdown')
-    plt.tight_layout()
-    plt.savefig(os.path.join(charts_dir, 'urgency_breakdown.png'), dpi=100)
-    plt.close()
-    
-    # ----------------------------------------------------
-    # CHART 4: Resolution Time
-    # ----------------------------------------------------
-    plt.figure(figsize=(8, 4))
-    resolved = issues.filter(status='Resolved', resolved_at__isnull=False).order_by('-resolved_at')[:5]
-    if resolved:
-        res_labels = [f"#{t.id}" for t in resolved]
-        res_durations = [round((t.resolved_at - t.created_at).total_seconds() / 3600.0, 1) for t in resolved]
-        plt.bar(res_labels, res_durations, color='#5DADE2')
-        plt.ylabel('Hours')
-    else:
-        plt.text(0.5, 0.5, 'No resolved issues yet', horizontalalignment='center', verticalalignment='center', color='#8B8F99')
-    plt.title('Resolution Time Analysis')
-    plt.tight_layout()
-    plt.savefig(os.path.join(charts_dir, 'resolution_time.png'), dpi=100)
-    plt.close()
+    high = issues.filter(urgency_level='High').count()
+    med = issues.filter(urgency_level='Medium').count()
+    low = issues.filter(urgency_level='Low').count()
+
+    try:
+        if HAS_MATPLOTLIB and plt is not None:
+            apply_dark_theme()
+            charts_dir = os.path.join(settings.BASE_DIR, 'issues', 'static', 'charts')
+            os.makedirs(charts_dir, exist_ok=True)
+            
+            # ----------------------------------------------------
+            # CHART 1: Issue Volume Trend
+            # ----------------------------------------------------
+            plt.figure(figsize=(8, 4))
+            if issues.exists():
+                dates = [t.created_at.date() for t in issues if t.created_at]
+                counts = Counter(dates)
+                if counts:
+                    sorted_dates = sorted(counts.keys())
+                    sorted_counts = [counts[d] for d in sorted_dates]
+                    plt.plot([str(d) for d in sorted_dates], sorted_counts, color='#5DADE2', marker='o', linewidth=2)
+                    plt.fill_between([str(d) for d in sorted_dates], sorted_counts, color='#5DADE2', alpha=0.25)
+            plt.title('Issue Volume Trend')
+            plt.xticks(rotation=45)
+            plt.tight_layout()
+            plt.savefig(os.path.join(charts_dir, 'issue_volume.png'), dpi=100)
+            plt.close()
+
+            # ----------------------------------------------------
+            # CHART 2: Sentiment Distribution
+            # ----------------------------------------------------
+            plt.figure(figsize=(8, 4))
+            pos = issues.filter(sentiment_score__gte=0.05).count()
+            neg = issues.filter(sentiment_score__lte=-0.05).count()
+            neu = issues.filter(sentiment_score__gt=-0.05, sentiment_score__lt=0.05).count()
+            plt.barh(['Neutral', 'Negative', 'Positive'], [neu, neg, pos], color=['#F0B361', '#F07550', '#79AB7B'])
+            plt.title('Sentiment Distribution')
+            plt.tight_layout()
+            plt.savefig(os.path.join(charts_dir, 'sentiment_distribution.png'), dpi=100)
+            plt.close()
+
+            # ----------------------------------------------------
+            # CHART 3: Urgency Breakdown
+            # ----------------------------------------------------
+            plt.figure(figsize=(6, 6))
+            data = [crit, high, med, low]
+            if sum(data) > 0:
+                plt.pie(data, labels=['Critical', 'High', 'Medium', 'Low'], colors=['#FF7F50', '#F07550', '#F0B361', '#79AB7B'], autopct='%1.1f%%', startangle=90, wedgeprops={'width': 0.4})
+            plt.title('Urgency Breakdown')
+            plt.tight_layout()
+            plt.savefig(os.path.join(charts_dir, 'urgency_breakdown.png'), dpi=100)
+            plt.close()
+            
+            # ----------------------------------------------------
+            # CHART 4: Resolution Time
+            # ----------------------------------------------------
+            plt.figure(figsize=(8, 4))
+            resolved = issues.filter(status='Resolved', resolved_at__isnull=False).order_by('-resolved_at')[:5]
+            if resolved:
+                res_labels = [f"#{t.id}" for t in resolved]
+                res_durations = [round((t.resolved_at - t.created_at).total_seconds() / 3600.0, 1) for t in resolved]
+                plt.bar(res_labels, res_durations, color='#5DADE2')
+                plt.ylabel('Hours')
+            else:
+                plt.text(0.5, 0.5, 'No resolved issues yet', horizontalalignment='center', verticalalignment='center', color='#8B8F99')
+            plt.title('Resolution Time Analysis')
+            plt.tight_layout()
+            plt.savefig(os.path.join(charts_dir, 'resolution_time.png'), dpi=100)
+            plt.close()
+    except Exception:
+        # Fall back cleanly to pre-rendered charts in serverless / read-only environment
+        pass
     
     context = {
         'issue_volume_url': '/static/charts/issue_volume.png',
@@ -485,8 +493,11 @@ def download_issues_excel(request):
         messages.error(request, "Developer portal requires admin privileges")
         return redirect('user_portal')
         
-    import openpyxl
-    from openpyxl.styles import Font, PatternFill, Alignment
+    try:
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment
+    except ImportError:
+        return redirect('download_issues_csv')
     
     wb = openpyxl.Workbook()
     ws = wb.active
