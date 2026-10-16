@@ -2,6 +2,13 @@ import os
 import shutil
 import sys
 from pathlib import Path
+import dj_database_url
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,7 +20,25 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-smartroute-internship
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 't')
 
 ALLOWED_HOSTS = ['.vercel.app', '127.0.0.1', 'localhost', '*']
-CSRF_TRUSTED_ORIGINS = ['https://*.vercel.app', 'http://127.0.0.1', 'http://localhost']
+
+# Vercel forwards the original host and protocol through environment variables
+# and request headers. Include those deployment URLs in CSRF origin checks.
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'http://127.0.0.1',
+    'http://localhost',
+]
+for deployment_url in (
+    os.environ.get('VERCEL_URL'),
+    os.environ.get('VERCEL_BRANCH_URL'),
+    os.environ.get('VERCEL_PROJECT_PRODUCTION_URL'),
+):
+    if deployment_url:
+        CSRF_TRUSTED_ORIGINS.append(
+            deployment_url if '://' in deployment_url else f'https://{deployment_url}'
+        )
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Application definition
 INSTALLED_APPS = [
@@ -60,41 +85,52 @@ TEMPLATES = [
 WSGI_APPLICATION = 'smartroute.wsgi.application'
 
 # Database
-IS_VERCEL = (
-    'VERCEL' in os.environ 
-    or 'VERCEL_ENV' in os.environ 
-    or 'NOW_REGION' in os.environ
-    or 'AWS_EXECUTION_ENV' in os.environ
-    or not sys.platform.startswith('win')
-)
+# Connects to Neon PostgreSQL when DATABASE_URL is set (e.g., in Vercel or local .env)
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-if IS_VERCEL:
-    DB_PATH = Path('/tmp/db.sqlite3')
-    SEED_DB = BASE_DIR / 'db.sqlite3'
-    if not DB_PATH.exists():
-        if SEED_DB.exists():
-            try:
-                shutil.copyfile(str(SEED_DB), str(DB_PATH))
-            except Exception:
-                pass
-        if not DB_PATH.exists():
-            try:
-                DB_PATH.touch()
-            except Exception:
-                pass
+if DATABASE_URL:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': DB_PATH,
-        }
+        'default': dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
     }
 else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+    IS_VERCEL = (
+        'VERCEL' in os.environ 
+        or 'VERCEL_ENV' in os.environ 
+        or 'NOW_REGION' in os.environ
+        or 'AWS_EXECUTION_ENV' in os.environ
+        or not sys.platform.startswith('win')
+    )
+    if IS_VERCEL:
+        DB_PATH = Path('/tmp/db.sqlite3')
+        SEED_DB = BASE_DIR / 'db.sqlite3'
+        if not DB_PATH.exists():
+            if SEED_DB.exists():
+                try:
+                    shutil.copyfile(str(SEED_DB), str(DB_PATH))
+                except Exception:
+                    pass
+            if not DB_PATH.exists():
+                try:
+                    DB_PATH.touch()
+                except Exception:
+                    pass
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': DB_PATH,
+            }
         }
-    }
+    else:
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.sqlite3',
+                'NAME': BASE_DIR / 'db.sqlite3',
+            }
+        }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -131,5 +167,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Authentication settings
 LOGIN_URL = '/login/'
-
 

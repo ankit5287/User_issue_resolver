@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.views.decorators.cache import never_cache
 from .models import Issue
 from .forms import IssueForm
 from .algorithms.sentiment import analyze_sentiment, get_sentiment_category, get_sentiment_analytics
@@ -42,6 +43,7 @@ def landing_view(request):
     """Redirect landing root to user portal."""
     return redirect('user_portal')
 
+@never_cache
 def user_portal_view(request):
     """Handle issue submission GET/POST inside the user portal interface."""
     if request.method == 'POST':
@@ -188,6 +190,7 @@ def all_issues_view(request):
     return render(request, 'all_issues.html', context)
 
 @login_required
+@never_cache
 def issue_detail_view(request, id):
     """Render and process updates (status, assigned team, urgency level, sentiment) for a single issue."""
     issue = get_object_or_404(Issue, id=id)
@@ -284,6 +287,7 @@ def redirect_issues(request):
     """Redirect legacy issues path to developer dashboard."""
     return redirect('developer_dashboard')
 
+@never_cache
 def role_login(request):
     """Handle GET to render login view and POST to authenticate and authorize based on role selection."""
     error_message = None
@@ -329,6 +333,7 @@ def role_logout(request):
     logout(request)
     return redirect('landing')
 
+@never_cache
 def role_signup(request):
     """Handle GET to render signup form and POST to register new user accounts."""
     error_message = None
