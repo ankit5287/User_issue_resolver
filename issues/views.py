@@ -310,6 +310,14 @@ def role_login(request):
         password_val = request.POST.get('password', '')
         
         user = authenticate(request, username=username_val, password=password_val)
+        if user is None and username_val:
+            # Case-insensitive fallback for mobile/browser auto-capitalization
+            try:
+                user_obj = User.objects.get(username__iexact=username_val)
+                user = authenticate(request, username=user_obj.username, password=password_val)
+            except (User.DoesNotExist, User.MultipleObjectsReturned):
+                pass
+
         if user is not None:
             if role == 'user':
                 if user.is_superuser:
@@ -322,9 +330,9 @@ def role_login(request):
                     login(request, user)
                     return redirect(next_url if next_url else 'developer_dashboard')
                 else:
-                    error_message = "Developer portal requires admin privileges"
+                    error_message = "This account does not have developer/staff permissions"
         else:
-            error_message = "Invalid credentials or insufficient permissions"
+            error_message = "Invalid username or password. Please check your credentials."
             
     # GET request setup
     if request.method == 'GET':
